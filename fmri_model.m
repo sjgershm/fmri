@@ -5,7 +5,7 @@ function SPM = fmri_model(EXPT,model,submat)
     % USAGE: SPM = fmri_model(EXPT,model,[submat])
     %
     % INPUTS:
-    %   EXPT object
+    %   EXPT - experiment structure
     %   model - model number
     %   submat (optional) - vector of subjects to estimate (default: all subjects)
     %
