@@ -48,7 +48,7 @@ function [R,p] = compute_reliability(beta,mask,k)
         
         % loop over all combinations
         for j = 1:size(C,1)
-            b = nanmean(y(C(j,:)),1);    % mean beta estimate
+            b = nanmean(y(C(j,:),:),1);    % mean beta estimate
             
             % within-event error
             w = setdiff(1:N,C(j,:));
