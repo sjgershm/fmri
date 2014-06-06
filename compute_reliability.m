@@ -43,7 +43,7 @@ function [R,p] = compute_reliability(beta,mask,k)
         y = beta{i}(:,mask);
         N = size(y,1);
         C = nchoosek(1:N,k);
-        R{i,1} = nan(size(C,1),V);
+        R{i,1} = zeros(size(C,1),V);
         R{i,2} = R{i,1};
         
         % loop over all combinations
