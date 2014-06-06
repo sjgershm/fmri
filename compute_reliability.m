@@ -53,15 +53,25 @@ function [R,p] = compute_reliability(beta,mask,k)
             % within-event error
             w = setdiff(1:N,C(j,:));
             if ~isempty(w)
-                R{i,1}(j,:) = nanmean(bsxfun(@minus,b,y(w,:)).^2,1);
+                %R{i,1}(j,:) = nanmean(bsxfun(@minus,b,y(w,:)).^2,1);
+                for jj = 1:length(w)
+                    R{i,1}(j,:) = R{i,1}(j,:) + corr(b',y(w(jj),:)')/length(w);
+                end
             end
             
             % between-event error
+            counter = 0;
             for m = 1:B
                 if m ~= i
-                    R{i,2}(j,:) = R{i,2}(j,:) + nanmean(bsxfun(@minus,b,beta{m}(:,mask)).^2)/(B-1);
+                    %R{i,2}(j,:) = R{i,2}(j,:) + nanmean(bsxfun(@minus,b,beta{m}(:,mask)).^2)/(B-1);
+                    for jj = 1:size(beta{m},1)
+                        counter = counter + 1;
+                        R{i,2}(j,:) = R{i,2}(j,:) + corr(b',beta{m}(jj,mask)');
+                    end
                 end
             end
+            R{i,2}(j,:) = R{i,2}(j,:)/counter;
         end
-        p(i,:) = nanmean(R{i,2}-R{i,1});
+        %p(i,:) = nanmean(R{i,2}-R{i,1});
+        p(i,:) = nanmean(R{i,1}-R{i,2});
     end
