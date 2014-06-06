@@ -48,20 +48,20 @@ function [R,p] = compute_reliability(beta,mask,k)
         
         % loop over all combinations
         for j = 1:size(C,1)
-            b = mean(y(C(j,:)),1);    % mean beta estimate
+            b = nanmean(y(C(j,:)),1);    % mean beta estimate
             
             % within-event error
             w = setdiff(1:N,C(j,:));
             if ~isempty(w)
-                R{i,1}(j,:) = mean(bsxfun(@minus,b,y(w,:)).^2,1);
+                R{i,1}(j,:) = nanmean(bsxfun(@minus,b,y(w,:)).^2,1);
             end
             
             % between-event error
             for m = 1:B
                 if m ~= i
-                    R{i,2}(j,:) = R{i,2}(j,:) + mean(bsxfun(@minus,b,beta{m}(:,mask)).^2)/(B-1);
+                    R{i,2}(j,:) = R{i,2}(j,:) + nanmean(bsxfun(@minus,b,beta{m}(:,mask)).^2)/(B-1);
                 end
             end
         end
-        p(i,:) = mean(R{i,2}-R{i,1});
+        p(i,:) = nanmean(R{i,2}-R{i,1});
     end
