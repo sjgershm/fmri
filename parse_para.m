@@ -14,7 +14,9 @@ function P = parse_para(filename,TR)
     %   P - structure with the following fields:
     %           .onsets - cell array, where each cell contains the vector of
     %           onsets (in seconds) for the corresponding event
-    %           .names - cell array containing the name of each event
+    %           .names - cell array containing the name of each event that
+    %                    occurs in the run
+    %           .names_all - names of all events in para file
     %           .durations - vector containing the duration (in seconds) of each event
     %           .events - vector containing event indices
     %
