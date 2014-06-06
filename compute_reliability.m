@@ -38,6 +38,8 @@ function [R,p] = compute_reliability(beta,mask,k)
     
     for i = 1:B
         
+        disp(num2str(i));
+        
         y = beta{i}(:,mask);
         N = size(y,1);
         C = nchoosek(1:N,k);
