@@ -63,5 +63,5 @@ function [R,p] = compute_reliability(beta,mask,k)
                 end
             end
         end
-        p(i,:) = nanmean(R{i,2}-R{i,1});
+        p(i,:) = nanmedian(R{i,2}-R{i,1});
     end
