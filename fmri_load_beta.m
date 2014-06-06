@@ -30,6 +30,7 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
     beta = cell(length(names),1);
     for i = 1:length(names)
         c = find_regressors(SPM.xX.name',names{i});
+        c = find(c);
         disp(names{i});
         for j = 1:length(c)
             fname = sprintf('beta_%3.4d.img',c(j));
