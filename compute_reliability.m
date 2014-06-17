@@ -1,8 +1,8 @@
-function [R,p] = compute_reliability(beta,mask,k)
+function p = compute_reliability(beta,mask,k)
     
     % Compute reliability of betas within a masked region.
     %
-    % USAGE: [R,p] = compute_reliability(beta,[mask],[k])
+    % USAGE: p = compute_reliability(beta,[mask],[k])
     %
     % INPUTS:
     %   beta - [N x 1] cell array, where each cell contains a  matrix of
@@ -31,37 +31,43 @@ function [R,p] = compute_reliability(beta,mask,k)
     if nargin < 3 || isempty(k); k = 1; end
     
     mask = mask(mask);
-    V = length(mask);
     B = length(beta);
-    R = cell(B,2);
-    p = nan(B,V);
+    p = zeros(B,1);
+    
+    y = []; n = [];
+    for i = 1:B
+        y = [y; beta{i}(:,mask)];
+        N = size(beta{i},1);
+        n = [n; zeros(N,1)+i];
+    end
     
     for i = 1:B
         
         disp(num2str(i));
         
-        y = beta{i}(:,mask);
-        N = size(y,1);
-        C = nchoosek(1:N,k);
-        R{i,1} = zeros(size(C,1),V);
-        R{i,2} = R{i,1};
+        ix = find(n==i);
+        C = nchoosek(ix,k);
+        nc = size(C,1);
+        correct = 0;
+        count = 0;
         
         % loop over all combinations
-        for j = 1:size(C,1)
+        for j = 1:nc
             b = nanmean(y(C(j,:),:),1);    % mean beta estimate
-            
-            % within-event error
-            w = setdiff(1:N,C(j,:));
-            if ~isempty(w)
-                R{i,1}(j,:) = nanmean(bsxfun(@minus,b,y(w,:)).^2,1);
-            end
-            
-            % between-event error
-            for m = 1:B
-                if m ~= i
-                    R{i,2}(j,:) = R{i,2}(j,:) + nanmean(bsxfun(@minus,b,beta{m}(:,mask)).^2)/(B-1);
+            w = setdiff(1:length(n),C(j,:));
+            nt = n(w);
+            r = corr(b',y(w,:)');
+            same = find(nt==i);
+            diff = find(nt~=i);
+            for i1 = 1:length(same)
+                for i2 = 1:length(diff)
+                    count = count + 1;
+                    if r(same(i1)) > r(diff(i2))
+                        correct = correct + 1;
+                    end
                 end
             end
         end
-        p(i,:) = nanmedian(R{i,2}-R{i,1});
+        
+        p(i) = correct/count;
     end
