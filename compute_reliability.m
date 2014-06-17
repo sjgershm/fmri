@@ -44,8 +44,6 @@ function p = compute_reliability(beta,mask,k,metric)
     
     for i = 1:B
         
-        disp(num2str(i));
-        
         ix = find(n==i);
         C = nchoosek(ix,k);
         nc = size(C,1);
