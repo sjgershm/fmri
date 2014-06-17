@@ -60,7 +60,7 @@ function [p, X] = compute_reliability(beta,mask,k,metric)
             r = pdist2(b,y(w,:),metric);
             same = find(nt==i);
             diff = find(nt~=i);
-            x(j,:) = [same diff];
+            x(j,:) = [mean(r(same)) mean(r(diff))];
             for i1 = 1:length(same)
                 for i2 = 1:length(diff)
                     count = count + 1;
