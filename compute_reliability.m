@@ -1,4 +1,4 @@
-function p = compute_reliability(beta,mask,k,metric)
+function [p, X] = compute_reliability(beta,mask,k,metric)
     
     % Compute reliability of betas within a masked region.
     %
@@ -34,6 +34,7 @@ function p = compute_reliability(beta,mask,k,metric)
     mask = mask(mask);
     B = length(beta);
     p = zeros(B,1);
+    X = zeros(B,2);
     
     y = []; n = [];
     for i = 1:B
@@ -49,6 +50,7 @@ function p = compute_reliability(beta,mask,k,metric)
         nc = size(C,1);
         correct = 0;
         count = 0;
+        x = zeros(nc,2);
         
         % loop over all combinations
         for j = 1:nc
@@ -58,6 +60,7 @@ function p = compute_reliability(beta,mask,k,metric)
             r = pdist2(b,y(w,:),metric);
             same = find(nt==i);
             diff = find(nt~=i);
+            x(j,:) = [same diff];
             for i1 = 1:length(same)
                 for i2 = 1:length(diff)
                     count = count + 1;
@@ -68,5 +71,6 @@ function p = compute_reliability(beta,mask,k,metric)
             end
         end
         
+        X(i,:) = mean(x);
         p(i) = correct/count;
     end
