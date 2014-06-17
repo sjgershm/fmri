@@ -1,4 +1,4 @@
-function p = compute_reliability(beta,mask,k)
+function p = compute_reliability(beta,mask,k,metric)
     
     % Compute reliability of betas within a masked region.
     %
@@ -29,6 +29,7 @@ function p = compute_reliability(beta,mask,k)
     
     if nargin < 2 || isempty(mask); mask = 1:size(beta{1},2); end       % use all voxels
     if nargin < 3 || isempty(k); k = 1; end
+    if nargin < 4 || isempty(metric); metric = 'euclidean'; end
     
     mask = mask(mask);
     B = length(beta);
@@ -56,13 +57,13 @@ function p = compute_reliability(beta,mask,k)
             b = nanmean(y(C(j,:),:),1);    % mean beta estimate
             w = setdiff(1:length(n),C(j,:));
             nt = n(w);
-            r = corr(b',y(w,:)');
+            r = pdist2(b,y(w,:),metric);
             same = find(nt==i);
             diff = find(nt~=i);
             for i1 = 1:length(same)
                 for i2 = 1:length(diff)
                     count = count + 1;
-                    if r(same(i1)) > r(diff(i2))
+                    if r(same(i1)) < r(diff(i2))
                         correct = correct + 1;
                     end
                 end
