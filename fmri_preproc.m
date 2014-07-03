@@ -38,7 +38,8 @@ function fmri_preproc(EXPT,subj,tasks)
     
     S = EXPT.subject(subj);
     adir = fullfile(EXPT.analysis_dir,S.name);  % make analysis directory
-    if ~exist(adir,'dir'); mkdir(adir); end
+    if exist(adir,'dir'); rmdir(adir); end
+    mkdir(adir);
     
     switch tasks
         case 'all'
