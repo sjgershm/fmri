@@ -54,7 +54,6 @@ function fmri_preproc(EXPT,subj,tasks)
             disp('Converting dicoms to nifti...');
             
             curdir = pwd;
-            if exist(niftidir,'dir'); rmdir(niftidir);  end
             for r = 1:length(S.functional)
                 disp(['run ',num2str(r)]);
                 dicomdir = S.functional(r).dicomdir;
@@ -63,6 +62,7 @@ function fmri_preproc(EXPT,subj,tasks)
                 files = dir(fullfile(dicomdir,sprintf('*-%d-*',run)));
                 files = dir2char(files,dicomdir);
                 hdr = spm_dicom_headers(files);
+				if exist(niftidir,'dir'); rmdir(niftidir);  end
                 if ~exist(niftidir,'dir'); mkdir(niftidir);  end
                 delete(fullfile(niftidir,'w*'));
                 delete(fullfile(niftidir,'s*'));
