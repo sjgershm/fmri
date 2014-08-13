@@ -13,7 +13,7 @@ function allRegressors = get_all_regressors(subj,model)
     % Walid Bendris, June 2014
 	
     curDir=cd;
-    cd(['/srv/old_data/projects/MACKEREL/analysis02/subj' sprintf('%02d', subj) '/model' model]);
+    cd(['/srv/old_data/projects/MACKEREL/analysis02/subj' sprintf('%02d', subj) '/model' num2str(model)]);
     load('SPM.mat');
     allRegressors={}; jStart=1;
     len=str2num(SPM.xX.name{end}(4:end-10));
