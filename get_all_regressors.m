@@ -32,5 +32,5 @@ function allRegressors = get_all_regressors(subj,model)
             end
         end
     end, allRegressors=unique(allRegressors);
-    cd curDir;
+    cd(curDir);
 end
