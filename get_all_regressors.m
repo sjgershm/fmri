@@ -21,12 +21,12 @@ function allRegressors = get_all_regressors(subj,model)
         for j=jStart:len
             if strncmp(SPM.xX.name{i}, ['Sn(' num2str(j) ') '], 6) && ...
                     strcmp(SPM.xX.name{i}(end-5:end), '*bf(1)')
-                    allRegressors{end+1,1}= SPM.xX.name{i}(7:end-6);
+                    allRegressors{end+1,1}=strtrim(SPM.xX.name{i}(7:end-6));
                     if j>jStart, jStart=j; end
                     break;
             elseif strncmp(SPM.xX.name{i}, ['Sn(' num2str(j) ') '], 7) && ...
                     strcmp(SPM.xX.name{i}(end-5:end), '*bf(1)')
-                    allRegressors{end+1,1}= SPM.xX.name{i}(8:end-6);
+                    allRegressors{end+1,1}=strtrim(SPM.xX.name{i}(8:end-6));
                     if j>jStart, jStart=j; end
                     break;
             end

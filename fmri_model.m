@@ -90,5 +90,6 @@ function SPM = fmri_model(EXPT,model,submat)
         SPM = spm_fmri_spm_ui(SPM);
         SPM = spm_spm(SPM);                     %estimate model
     end
-    
+    save('SPM','SPM','-v7.3');
+	
     cd(cdir);       % return to original directory
