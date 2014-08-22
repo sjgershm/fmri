@@ -47,6 +47,6 @@ function [c n] = find_regressors(regnames, name)
         end
         c = ~cellfun('isempty',regexp(regnames, name));
         if ~any(c)
-            warning('dawlab:regressors:notfound', 'No matching regressors for "%s"', name);
+            warning('find_regressors:notfound', 'No matching regressors for "%s"', name);
         end
     end
