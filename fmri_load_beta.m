@@ -18,7 +18,7 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
     %   mask - binary image indicating which voxels are included in the mask
     %
     % Sam Gershman, June 2014
-    
+	
     S = EXPT.subject(subj);
     M = ['model',num2str(model)];
     load(fullfile(EXPT.analysis_dir,S.name,M,'SPM'));

@@ -19,11 +19,11 @@ function [c n] = find_regressors(regnames, name)
         c = name;
         n = [horzcat(regnames{c>0}) '>' horzcat(regnames{c<0})];
     elseif iscell(name)
-        [c n] = cellfun(@(n) find_regressors(regnames, n), name(:), 'UniformOutput', 0);
+        [c nt] = cellfun(@(nt) find_regressors(regnames, nt), name(:), 'UniformOutput', 0);
         c = any(cell2mat(c));
-        n = n{1};
-        for i = 2:length(n)
-            n = [n '+' n{i}];
+        n = nt{1};
+        for i = 2:length(nt)
+            n = [n '+' nt{i}];
         end
     elseif isstruct(name)
         n = name.name;
