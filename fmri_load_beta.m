@@ -18,6 +18,9 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
     %   mask - binary image indicating which voxels are included in the mask
     %
     % Sam Gershman, June 2014
+	% Updates:
+	%	Walid 2014-08-26: Now can take 'names' as a numeric array to bypass the
+	%					  find_regressors step
 	
     S = EXPT.subject(subj);
     M = ['model',num2str(model)];
@@ -27,15 +30,26 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
     V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,'mask.img'));
     mask = spm_read_vols(V); mask = mask~=0;
     
-    beta = cell(length(names),1);
-    for i = 1:length(names)
-        c = find_regressors(SPM.xX.name',names{i});
-        c = find(c);
-        disp(names{i});
-        for j = 1:length(c)
-            fname = sprintf('beta_%3.4d.img',c(j));
-            V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,fname));
-            Y = spm_read_vols(V);
-            beta{i}(j,:) = Y(mask);
+	if isnumeric(names)
+        beta = {};
+		names = find(names);
+		for j = 1:length(names)
+			fname = sprintf('beta_%3.4d.img',names(j));
+			V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,fname));
+			Y = spm_read_vols(V);
+			beta(j,:) = Y(mask);
+		end
+    else
+        beta = cell(length(names),1);
+        for i = 1:length(names)
+            c = find_regressors(SPM.xX.name',names{i});
+            c = find(c);
+            disp(names{i});
+            for j = 1:length(c)
+                fname = sprintf('beta_%3.4d.img',c(j));
+                V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,fname));
+                Y = spm_read_vols(V);
+                beta{i}(j,:) = Y(mask);
+            end
         end
     end
