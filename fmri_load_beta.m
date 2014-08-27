@@ -30,8 +30,8 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
     V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,'mask.img'));
     mask = spm_read_vols(V); mask = mask~=0;
     
-	if isnumeric(names)
-        beta = {};
+	if islogical(names)
+        beta = [];
 		names = find(names);
 		for j = 1:length(names)
 			fname = sprintf('beta_%3.4d.img',names(j));
