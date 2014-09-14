@@ -3,6 +3,21 @@ function masks = fmri_reslice_masks(EXPT,subj,model,maskdir,maskname)
     % Reslice NIFTI masks into subject's anatomical space.
     %
     % USAGE: masks = fmri_reslice_masks(EXPT,subj,model,maskdir,[maskname])
+    %
+    % INPUTS:
+    %   EXPT - experiment structure
+    %   subj - subject number
+    %   model - model number
+    %   maskdir - directory containing masks (NIFTI files encoding binary data)
+    %   maskname (optional) - if provided, mat file will be written into
+    %           the subject's model directory containing the masks (see below)
+    %
+    % OUTPUTS:
+    %   masks - [1 x nMasks] cell array containing binary mask vectors.
+    %   Note that the size of this array is the same size as the automatically created
+    %   SPM mask image.
+    %
+    % Sam Gershman, Sep 2014
     
     S = EXPT.subject(subj);
     run = S.anatomical.run;
