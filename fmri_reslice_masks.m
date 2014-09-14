@@ -1,8 +1,8 @@
-function masks = fmri_reslice_masks(EXPT,subj,model,maskdir)
+function masks = fmri_reslice_masks(EXPT,subj,model,maskdir,maskname)
     
     % Reslice NIFTI masks into subject's anatomical space.
     %
-    % USAGE: masks = fmri_reslice_masks(EXPT,subj,model,maskdir)
+    % USAGE: masks = fmri_reslice_masks(EXPT,subj,model,maskdir,[maskname])
     
     S = EXPT.subject(subj);
     run = S.anatomical.run;
@@ -24,4 +24,8 @@ function masks = fmri_reslice_masks(EXPT,subj,model,maskdir)
         Y = spm_read_vols(V);
         masks{i} = Y(mask)>0.5;
         delete(f);
+    end
+    
+    if nargout > 4
+        save(fullfile(EXPT.analysis_dir,S.name,M,maskname),'masks');
     end
