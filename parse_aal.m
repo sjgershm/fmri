@@ -1,6 +1,6 @@
 function names = parse_aal
     
-    spmdir = which('SPM.m');
+    spmdir = fileparts(which('SPM.m'));
     T = fullfile(spmdir,'toolbox/WFU_PickAtlas_3.0.4/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.txt');
     f = fopen(T);
     fgetl(f);   % remove header
