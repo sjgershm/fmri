@@ -1,4 +1,4 @@
-function fmri_preproc(EXPT,subj,tasks)
+function fmri_preproc_princeton(EXPT,subj,tasks)
     
     % Preprocess fMRI data.
     %
@@ -41,144 +41,190 @@ function fmri_preproc(EXPT,subj,tasks)
     if ~exist(adir,'dir'); mkdir(adir); end
     
     switch tasks
-        case 'all'
-            % Do everything
-            tasks = {'dicom_convert' 'realign' 'coregister' 'normalize'};
-            fmri_preproc(EXPT,subj,tasks);
-            return
-            
-        case 'dicom_convert'
-            % Convert dicom files to nifti.
-            
-            disp('Converting dicoms to nifti...');
-            
-            curdir = pwd;
-            for r = 1:length(S.functional)
-                disp(['run ',num2str(r)]);
-                dicomdir = S.functional(r).dicomdir;
-                niftidir = S.functional(r).niftidir;
-                run = S.functional(r).run;
-                files = dir(fullfile(dicomdir,sprintf('*-%d-*',run)));
-                files = dir2char(files,dicomdir);
-                hdr = spm_dicom_headers(files);
-                if ~exist(niftidir,'dir'); mkdir(niftidir);  end
-                delete(fullfile(niftidir,'w*'));
-                delete(fullfile(niftidir,'s*'));
-                cd(niftidir);
-                spm_dicom_convert(hdr,'all','flat','nii');
-            end
-            disp('anatomical');
-            dicomdir = S.anatomical.dicomdir;
-            niftidir = S.anatomical.niftidir;
-            run = S.anatomical.run;
-            files = dir(fullfile(dicomdir,sprintf('*-%d-*',run)));
+      case 'all'
+        % Do everything
+        tasks = {'dicom_convert' 'realign' 'coregister' 'normalize'};
+        fmri_preproc(EXPT,subj,tasks);
+        return
+        
+      case 'dicom_convert'
+        % Convert dicom files to nifti.
+        
+        disp('Converting dicoms to nifti...');
+        
+        curdir = pwd;            
+        for r = 1:length(S.functional)
+            %disp(['run ',num2str(r)]);
+            dicomdir = S.functional(r).dicomdir
+            niftidir = S.functional(r).niftidir
+            run = S.functional(r).run;
+            % FP:
+            %files = dir(fullfile(dicomdir,sprintf('*-%d-*',run)));
+            files = dir(fullfile(dicomdir,sprintf('%d-*.dcm',run)));
+            fprintf('run %d\t%d files\n',r,length(files));
+
             files = dir2char(files,dicomdir);
             hdr = spm_dicom_headers(files);
-            if ~exist(niftidir,'dir'); mkdir(niftidir); end
+            if ~exist(niftidir,'dir'); mkdir(niftidir);  end
+            delete(fullfile(niftidir,'w*'));
+            delete(fullfile(niftidir,'s*'));
             cd(niftidir);
             spm_dicom_convert(hdr,'all','flat','nii');
-            cd(curdir);
-        
-        case 'realign'
-            % This step does motion correction. Only a mean image (mean_*) is
-            % resliced; all other images have their headers modified.
-            
-            disp('Realigning...')
-            
-            % get nifti filenames
-            for r = 1:length(S.functional)
-                niftidir = S.functional(r).niftidir;
-                run = S.functional(r).run;
-                files{r,1} = fmri_get(fullfile(niftidir,sprintf('f*-%3.4d-*',run)));
-            end
-            
-            spm_realign(files); % run realignment
-            spm_reslice(files,struct('mean',1,'which',0));  % write mean image
-            
-            % move the movement parameter files (rp*) to analysis directory
-            E = fullfile(EXPT.analysis_dir,S.name,'movement');
-            if ~exist(E,'dir'); mkdir(E); end
-            for r = 1:length(S.functional)
-                niftidir = S.functional(r).niftidir;
-                run = S.functional(r).run;
-                rp = fmri_get(fullfile(niftidir,sprintf('rp*-%3.4d-*',run)));
-                movefile(rp,fullfile(E,['rp',num2str(r)]));
-            end
+        end
 
-        case 'coregister'
-            % This step first coregisters the mean functional to the
-            % anatomical, and then coregisters the anatomical to the
-            % MNI template.
+        disp('anatomical');
+        dicomdir = S.anatomical.dicomdir;
+        niftidir = S.anatomical.niftidir;
+        run = S.anatomical.run;
+        %FP
+        %files = dir(fullfile(dicomdir,sprintf('*-%d-*',run)));
+        files = dir(fullfile(dicomdir,sprintf('%d-*.dcm',run)));
+        files = dir2char(files,dicomdir);
+        
+        hdr = spm_dicom_headers(files);
+        if ~exist(niftidir,'dir'); mkdir(niftidir); end
+        cd(niftidir);
+        spm_dicom_convert(hdr,'all','flat','nii');
+        cd(curdir);        
+
+        
+      case 'realign'
+        % This step does motion correction. Only a mean image (mean_*) is
+        % resliced; all other images have their headers modified.
+        
+        disp('Realigning...')
+        
+        % get nifti filenames
+        sname = EXPT.subject(subj).name;
+        
+        for r = 1:length(S.functional)
+            niftidir = S.functional(r).niftidir;
+            run = S.functional(r).run;
+            date = S.functional(r).date;
             
-            disp('Coregistration...')
+            files{r,1} = fmri_get(fullfile(niftidir,sprintf('f%s_%s-%3.4d-*.nii',sname,date,run)));
+            fprintf('run %d\t%d files\n',r,length(files{r,1}));
+            %for e = 1:length(files{r,1})
+            %    fprintf('\t%s\n',files{r,1}(e,:));
+            %end
+        end
+        
+        spm_realign(files); % run realignment
+        spm_reslice(files,struct('mean',1,'which',0));  % write mean image
+        
+        % move the movement parameter files (rp*) to analysis directory
+        E = fullfile(EXPT.analysis_dir,S.name,'movement');
+        if ~exist(E,'dir'); mkdir(E); end
+        for r = 1:length(S.functional)
+            niftidir = S.functional(r).niftidir;
+            run = S.functional(r).run;
+            rp = fmri_get(fullfile(niftidir,sprintf('rp*-%3.4d-*',run)));
+            movefile(rp,fullfile(E,['rp',num2str(r)]));
+        end
+
+        
+      case 'coregister'
+        % This step first coregisters the mean functional to the
+        % anatomical, and then coregisters the anatomical to the
+        % MNI template.
+        
+        disp('Coregistration...')
+        sname = EXPT.subject(subj).name;
+        
+        % 1) mean functional -> anatomical
+        % use normalied mutual information for registering images from
+        % different modalities (epi -> T1)
+        niftidir = S.functional(1).niftidir;
+        mean_epi = fmri_get(fullfile(niftidir,'mean*'))
+        run = S.anatomical.run;
+        %anatomical = fmri_get(fullfile(S.anatomical.niftidir,sprintf('*-%3.4d-*',run)))
+        anatomical = fmri_get(fullfile(S.anatomical.niftidir,sprintf('*-%3.4d-*',run)))
+        %pause
+        
+        T1 = spm_coreg(anatomical,mean_epi,struct('cost_fun','nmi','graphics',0));
+        
+        % transform all other functionals
+        for r = 1:length(S.functional)
+            niftidir = S.functional(r).niftidir;
+            run = S.functional(r).run;
+            date = S.functional(r).date;
             
-            % 1) mean functional -> anatomical
-            % use normalied mutual information for registering images from
-            % different modalities (epi -> T1)
-            niftidir = S.functional(1).niftidir;
-            mean_epi = fmri_get(fullfile(niftidir,'mean*'));
-            run = S.anatomical.run;
-            anatomical = fmri_get(fullfile(S.anatomical.niftidir,sprintf('*-%3.4d-*',run)));
-            T1 = spm_coreg(anatomical,mean_epi,struct('cost_fun','nmi','graphics',0));
+            %P{r,1} = fmri_get(fullfile(niftidir,sprintf('f*-%3.4d-*',run)));
+            P{r,1} = fmri_get(fullfile(niftidir,sprintf('f%s_%s-%3.4d-*.nii',sname,date,run)));
             
-            % transform all other functionals
-            for r = 1:length(S.functional)
-                niftidir = S.functional(r).niftidir;
-                run = S.functional(r).run;
-                P{r,1} = fmri_get(fullfile(niftidir,sprintf('*-%3.4d-*',run)));
+            fprintf('run %d\t%d files\n',r,length(P{r,1}));
+            %for e = 1:length(P{r,1})
+            %    fprintf('\t%s\n',P{r,1}(e,:));
+            %end
+        end
+        %pause
+        
+        P = [P; mean_epi];
+        coreg_apply(P,T1);
+        
+        % 2) anatomical -> MNI template
+        % use normalied cross-correlation for registering images from
+        % the same modality (T1 -> T1)
+        template = which('T1.nii');
+        T2 = spm_coreg(template,anatomical,struct('cost_fun','ncc','graphics',0));
+        P = [P; anatomical];
+        coreg_apply(P,T2);   % transform all other functionals and anatomical
+        
+        % save coregistration parameters
+        save(fullfile(adir,'coreg_params'),'T1','T2');
+        
+      case 'normalize'
+        % Segment and normalize anatomical image to MNI template.
+        % Functionals and anatomical prepended with 'w'.
+        
+        disp('Normalizing anatomical...')
+        sname = EXPT.subject(subj).name;
+        
+        run = S.anatomical.run
+        anatomical = fmri_get(fullfile(S.anatomical.niftidir,sprintf('*-%3.4d-*',run)))
+        
+        res = spm_preproc(anatomical);   % compute warping parameters
+        sn = spm_prep2sn(res);
+        spm_write_sn(anatomical,sn);     % normalize anatomical using the warp parameters already calculated
+        
+        % normalize functionals
+        for r = 1:length(S.functional)
+            niftidir = S.functional(r).niftidir;
+            run = S.functional(r).run;
+            date = S.functional(r).date;
+            
+            %P{r,1} = fmri_get(fullfile(niftidir,sprintf('f%s_%s-%3.4d-*.nii',sname,date,run)));
+            
+            %P = fmri_get(fullfile(niftidir,sprintf('f*-%3.4d-*',run)));
+            P = fmri_get(fullfile(niftidir,sprintf('f%s_%s-%3.4d-*.nii',sname,date,run)));
+            
+            fprintf('run %d\t%d files\n',r,length(P));
+            %for e = 1:length(P)
+            %    fprintf('\t%s\n',P(e,:));
+            %end
+            %pause
+            
+            spm_write_sn(P,sn);
+        end
+        
+        adir = fullfile(EXPT.analysis_dir,EXPT.subject(subj).name);
+        if ~exist(adir,'dir'); mkdir(adir); end
+        save(fullfile(adir,'normalization_params'),'sn');
+        
+      case 'smooth'
+        % Smooth images with Gaussian kernel (width specified in EXPT.fwhm).
+        % Functionals prepended with 's'.
+        
+        disp('Smoothing...');
+        
+        for r = 1:length(S.functional)
+            niftidir = S.functional(r).niftidir;
+            run = S.functional(r).run;
+            P = fmri_get(fullfile(niftidir,sprintf('w*-%3.4d-*',run)));
+            for j = 1:size(P,1)
+                [pth,nam,ext,num] = spm_fileparts(P(j,:));
+                u = fullfile(pth,['s' nam ext num]);    % preprend 's' to filenames
+                spm_smooth(P(j,:),u,EXPT.fwhm);
             end
-            P = [P; mean_epi];
-            coreg_apply(P,T1);
-            
-            % 2) anatomical -> MNI template
-            % use normalied cross-correlation for registering images from
-            % the same modality (T1 -> T1)
-            template = which('T1.nii');
-            T2 = spm_coreg(template,anatomical,struct('cost_fun','ncc','graphics',0));
-            P = [P; anatomical];
-            coreg_apply(P,T2);   % transform all other functionals and anatomical
-            
-            % save coregistration parameters
-            save(fullfile(adir,'coreg_params'),'T1','T2');
-            
-        case 'normalize'
-            % Segment and normalize anatomical image to MNI template.
-            % Functionals and anatomical prepended with 'w'.
-            
-            disp('Normalizing anatomical...')
-            
-            run = S.anatomical.run;
-            anatomical = fmri_get(fullfile(S.anatomical.niftidir,sprintf('*-%3.4d-*',run)));
-            res = spm_preproc(anatomical);   % compute warping parameters
-            sn = spm_prep2sn(res);
-            spm_write_sn(anatomical,sn);     % normalize anatomical using the warp parameters already calculated
-            
-            % normalize functionals
-            for r = 1:length(S.functional)
-                niftidir = S.functional(r).niftidir;
-                run = S.functional(r).run;
-                P = fmri_get(fullfile(niftidir,sprintf('f*-%3.4d-*',run)));
-                spm_write_sn(P,sn);
-            end
-            
-            adir = fullfile(EXPT.analysis_dir,EXPT.subject(subj).name);
-            if ~exist(adir,'dir'); mkdir(adir); end
-            save(fullfile(adir,'normalization_params'),'sn');
-            
-        case 'smooth'
-            % Smooth images with Gaussian kernel (width specified in EXPT.fwhm).
-            % Functionals prepended with 's'.
-            
-            disp('Smoothing...');
-            
-            for r = 1:length(S.functional)
-                niftidir = S.functional(r).niftidir;
-                run = S.functional(r).run;
-                P = fmri_get(fullfile(niftidir,sprintf('w*-%3.4d-*',run)));
-                for j = 1:size(P,1)
-                    [pth,nam,ext,num] = spm_fileparts(P(j,:));
-                    u = fullfile(pth,['s' nam ext num]);    % preprend 's' to filenames
-                    spm_smooth(P(j,:),u,EXPT.fwhm);
-                end
-            end
+        end
     end
