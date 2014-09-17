@@ -41,6 +41,6 @@ function masks = fmri_reslice_masks(EXPT,subj,model,maskdir,maskname)
         delete(f);
     end
     
-    if nargout > 4
+    if nargin > 4
         save(fullfile(EXPT.analysis_dir,S.name,M,maskname),'masks');
     end
