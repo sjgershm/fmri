@@ -1,4 +1,4 @@
-function SPM = fmri_model(EXPT,model,submat,runs)
+function SPM = fmri_model_old(EXPT,model,submat)
     
     % First-level GLM analysis.
     %
@@ -24,47 +24,47 @@ function SPM = fmri_model(EXPT,model,submat,runs)
     
     for subj = submat;
         
+        % SPM settings
+        clear SPM
+        SPM.xY.RT = EXPT.TR;
+        SPM.xBF.T = defaults.stats.fmri.fmri_t;
+        SPM.xBF.T0 = defaults.stats.fmri.fmri_t0;
+        SPM.xBF.dt = SPM.xY.RT/SPM.xBF.T;
+        SPM.xBF.UNITS   = 'secs';     % time units ('scans', 'secs')
+        SPM.xBF.name    = 'hrf';      % basis function type
+        SPM.xBF.factor = [];
+        SPM.xBF.Volterra = 1;
+        SPM.xBF = spm_get_bf(SPM.xBF);
+        SPM.xGX.iGXcalc = 'none';     % global intensity normalization (note: 'none' actually means 'session-specific')
+        SPM.xVi.form    = 'AR(1)';    % correct for serial correlations ('none', 'AR(1)')
+        
         S = EXPT.subject(subj);
         disp(S.name);
-        if nargin < 4; runs = 1:length(S.functional); end
+        modeldir = fullfile(EXPT.analysis_dir,S.name,['model',num2str(model)]);
+        if exist(modeldir,'dir'); delete(fullfile(modeldir,'*')); end
+        mkdir(modeldir);
+        cd(modeldir);
         
-        for i = runs
-            
-            % SPM settings
-            clear SPM
-            SPM.xY.RT = EXPT.TR;
-            SPM.xBF.T = defaults.stats.fmri.fmri_t;
-            SPM.xBF.T0 = defaults.stats.fmri.fmri_t0;
-            SPM.xBF.dt = SPM.xY.RT/SPM.xBF.T;
-            SPM.xBF.UNITS   = 'secs';     % time units ('scans', 'secs')
-            SPM.xBF.name    = 'hrf';      % basis function type
-            SPM.xBF.factor = [];
-            SPM.xBF.Volterra = 1;
-            SPM.xBF = spm_get_bf(SPM.xBF);
-            SPM.xGX.iGXcalc = 'none';     % global intensity normalization (note: 'none' actually means 'session-specific')
-            SPM.xVi.form    = 'AR(1)';    % correct for serial correlations ('none', 'AR(1)')
-            
-            modeldir = fullfile(EXPT.analysis_dir,S.name,['model',num2str(model)],['run',num2str(i)]);
-            if exist(modeldir,'dir'); delete(fullfile(modeldir,'*')); end
-            mkdir(modeldir);
-            cd(modeldir);
+        ii = 0;
+        for i = 1:length(S.functional)
             
             % load regressor info (names, onsets and durations)
             para = S.functional(i).para{model};
             if ~isempty(para)
+                ii = ii + 1;
                 reg = parse_para(para,EXPT.TR);
                 
                 % specify image file names
                 niftidir = S.functional(i).niftidir;
                 run = S.functional(i).run;
-                SPM.xY.P{1} = fmri_get(fullfile(niftidir,sprintf('w*-%3.4d-*',run)));
-                SPM.nscan = size(SPM.xY.P{1},1);
+                SPM.xY.P{ii,1} = fmri_get(fullfile(niftidir,sprintf('w*-%3.4d-*',run)));
+                SPM.nscan(ii) = size(SPM.xY.P{ii},1);
                 
                 % load movement regressors
                 mrp = fullfile(EXPT.analysis_dir,S.name,'movement',['rp',num2str(i)]);
-                SPM.Sess.C.C = load(mrp);
-                for j = 1:size(SPM.Sess.C.C,2)
-                    SPM.Sess.C.name{j} = ['movement',num2str(j)];
+                SPM.Sess(ii).C.C = load(mrp);
+                for j = 1:size(SPM.Sess(ii).C.C,2)
+                    SPM.Sess(ii).C.name{j} = ['movement',num2str(j)];
                 end
                 
                 % configure the input structure array
@@ -76,21 +76,20 @@ function SPM = fmri_model(EXPT,model,submat,runs)
                         U.ons  = reg.onsets{j}(:);
                         U.dur  = reg.durations(j) .* ones(size(U.ons));
                         U.P    = struct('name', 'none', 'h', 0);
-                        SPM.Sess.U(n) = U;
+                        SPM.Sess(ii).U(n) = U;
                     end
                 end
                 
                 % high-pass filter
-                SPM.xX.K.HParam = defaults.stats.fmri.hpf;
+                SPM.xX.K(ii).HParam = defaults.stats.fmri.hpf;
             end
-            
-            delete('mask.img'); % make spm re-use directory without prompting
-            SPM.xY.P = char(SPM.xY.P);
-            SPM = spm_fmri_spm_ui(SPM);
-            SPM = spm_spm(SPM);                     %estimate model
-            save('SPM','SPM','-v7.3');
-            
         end
+        
+        delete('mask.img'); % make spm re-use directory without prompting
+        SPM.xY.P = char(SPM.xY.P);
+        SPM = spm_fmri_spm_ui(SPM);
+        SPM = spm_spm(SPM);                     %estimate model
+		save('SPM','SPM','-v7.3');
     end
-    
+	
     cd(cdir);       % return to original directory
