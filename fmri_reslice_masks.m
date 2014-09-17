@@ -25,7 +25,7 @@ function masks = fmri_reslice_masks(EXPT,subj,model,maskdir,maskname)
     
     % load SPM mask
     M = ['model',num2str(model)];
-    V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,'mask.img'));
+    V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,'run1','mask.img'));
     mask = spm_read_vols(V); mask = mask~=0;
     
     F = dir(fullfile(maskdir,'*.nii'));
