@@ -148,7 +148,7 @@ function fmri_preproc(EXPT,subj,tasks)
             disp('Normalizing anatomical...')
             
             run = S.anatomical.run;
-            anatomical = fmri_get(fullfile(S.anatomical.niftidir,sprintf('*-%3.4d-*',run)));
+            anatomical = fmri_get(fullfile(S.anatomical.niftidir,sprintf('s*-%3.4d-*',run)));
             res = spm_preproc(anatomical);   % compute warping parameters
             sn = spm_prep2sn(res);
             spm_write_sn(anatomical,sn);     % normalize anatomical using the warp parameters already calculated

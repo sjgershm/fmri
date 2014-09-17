@@ -2,12 +2,13 @@ function SPM = fmri_model(EXPT,model,submat,runs)
     
     % First-level GLM analysis.
     %
-    % USAGE: SPM = fmri_model(EXPT,model,[submat])
+    % USAGE: SPM = fmri_model(EXPT,model,[submat],[runs])
     %
     % INPUTS:
     %   EXPT - experiment structure
     %   model - model number
     %   submat (optional) - vector of subjects to estimate (default: all subjects)
+    %   runs (optional) - which runs to analyze
     %
     % OUTPUTS:
     %   SPM - model structure
@@ -89,7 +90,8 @@ function SPM = fmri_model(EXPT,model,submat,runs)
             SPM = spm_fmri_spm_ui(SPM);
             SPM = spm_spm(SPM);                     %estimate model
             save('SPM','SPM','-v7.3');
-            
+            name = SPM.xX.name;
+            save('regnames','name');
         end
     end
     
