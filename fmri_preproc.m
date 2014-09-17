@@ -155,6 +155,7 @@ function fmri_preproc(EXPT,subj,tasks)
             
             % normalize functionals
             for r = 1:length(S.functional)
+                disp(['run ',num2str(r), ' / ',num2str(length(S.functional))]);
                 niftidir = S.functional(r).niftidir;
                 run = S.functional(r).run;
                 P = fmri_get(fullfile(niftidir,sprintf('f*-%3.4d-*',run)));
