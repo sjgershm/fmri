@@ -29,7 +29,8 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
     V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,'run1','mask.img'));
     mask = spm_read_vols(V); mask = mask~=0;
     
-    ii = 0;
+    ii = zeros(length(names),1);
+    beta = cell(length(names),1);
     for run = 1:length(S.functional)
         load(fullfile(EXPT.analysis_dir,S.name,M,['run',num2str(run)],'regnames'));
         if islogical(names)
@@ -37,22 +38,22 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
             names = find(names);
             for j = 1:length(names)
                 fname = sprintf('beta_%3.4d.img',names(j));
-                V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,fname));
+                V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,['run',num2str(run)],fname));
                 Y = spm_read_vols(V);
                 beta(j,:) = Y(mask);
             end
         else
-            beta = cell(length(names),1);
+            
             for i = 1:length(names)
                 c = find_regressors(name',names{i});
                 c = find(c);
                 disp(names{i});
                 for j = 1:length(c)
                     fname = sprintf('beta_%3.4d.img',c(j));
-                    V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,fname));
+                    V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,['run',num2str(run)],fname));
                     Y = spm_read_vols(V);
-                    ii = ii + 1;
-                    beta{i}(ii,:) = Y(mask);
+                    ii(i) = ii(i) + 1;
+                    beta{i}(ii(i),:) = Y(mask);
                 end
             end
         end
