@@ -26,18 +26,18 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
     M = ['model',num2str(model)];
     
     % load SPM mask
-    V = spm_vol(fullfile(EXPT.analysis_dir,S.names,M,'run1','mask.img'));
+    V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,'run1','mask.img'));
     mask = spm_read_vols(V); mask = mask~=0;
     
     ii = 0;
     for run = 1:length(S.functional)
-        load(fullfile(EXPT.analysis_dir,S.names,M,['run',num2str(run)],'regnames'));
+        load(fullfile(EXPT.analysis_dir,S.name,M,['run',num2str(run)],'regnames'));
         if islogical(names)
             beta = [];
             names = find(names);
             for j = 1:length(names)
                 fname = sprintf('beta_%3.4d.img',names(j));
-                V = spm_vol(fullfile(EXPT.analysis_dir,S.names,M,fname));
+                V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,fname));
                 Y = spm_read_vols(V);
                 beta(j,:) = Y(mask);
             end
@@ -49,7 +49,7 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
                 disp(names{i});
                 for j = 1:length(c)
                     fname = sprintf('beta_%3.4d.img',c(j));
-                    V = spm_vol(fullfile(EXPT.analysis_dir,S.names,M,fname));
+                    V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,fname));
                     Y = spm_read_vols(V);
                     ii = ii + 1;
                     beta{i}(ii,:) = Y(mask);
