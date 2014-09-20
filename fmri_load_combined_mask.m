@@ -1,8 +1,8 @@
-function [combined_mask] = fmri_load_combined_mask(EXPT,model,subj)
+function [mask_combined,mask_run1] = fmri_load_combined_mask(EXPT,model,subj)
     
     % Returns a mask obtained by ANDing the masks in all runs
     %
-    % USAGE: [combined_mask] = fmri_load_beta(EXPT,model,subj)
+    % USAGE: [mask_combined] = fmri_load_beta(EXPT,model,subj)
     %
     % INPUTS:
     %   EXPT - experiment structure
@@ -11,7 +11,8 @@ function [combined_mask] = fmri_load_combined_mask(EXPT,model,subj)
     %
     % OUTPUTS:
     %    
-    %   combined_mask - binary image indicating which voxels are included in all run masks
+    %   mask_combined - binary image indicating which voxels are included in all run masks
+    %   mask_run1 - same for run 1 only, as that is used for complang02_make_langloc_roi
     %
     % Francisco Pereira, September 2014 (adapted from fmri_load_beta)
     % Updates:
@@ -19,7 +20,7 @@ function [combined_mask] = fmri_load_combined_mask(EXPT,model,subj)
     S = EXPT.subject(subj);
     M = ['model',num2str(model)];
 
-    combined_mask = [];
+    mask_combined = [];
     
     for run = 1:length(S.functional)
         % load SPM mask
@@ -27,10 +28,10 @@ function [combined_mask] = fmri_load_combined_mask(EXPT,model,subj)
         V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,rtxt,'mask.img'));
         mask = spm_read_vols(V); mask = mask~=0;
     
-        if isempty(combined_mask)
-            % this is run 1
-            combined_mask = mask;
+        if run == 1
+            mask_combined = mask;
+            mask_run1 = mask;
         else
-            combined_mask = combined_mask & mask;
+            mask_combined = mask_combined & mask;
         end
     end
