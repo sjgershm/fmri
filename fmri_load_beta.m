@@ -1,4 +1,4 @@
-function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
+function [beta, mask] = fmri_load_beta(EXPT,model,subj,names,suppress)
     
     % Load beta images.
     %
@@ -9,6 +9,8 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
     %   model - model number
     %   subj - subject number
     %   names - [N x 1] cell array of event names
+    %  OPTIONAL:
+    %   suppress - 1 to suppress output (default 0)
     %
     % OUTPUTS:
     %   beta - [N x 1] cell array, where each cell contains a [K x V] matrix of
@@ -21,6 +23,9 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
     % Updates:
     %	Walid 2014-08-26: Now can take 'names' as a numeric array to bypass the
     %					  find_regressors step
+    if nargin<5
+        suppress=0;
+    end
     
     S = EXPT.subject(subj);
     M = ['model',num2str(model)];
@@ -47,7 +52,7 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names)
             for i = 1:length(names)
                 c = find_regressors(name',names{i});
                 c = find(c);
-                disp(names{i});
+                if suppress~=1, disp(names{i}); end
                 for j = 1:length(c)
                     fname = sprintf('beta_%3.4d.img',c(j));
                     V = spm_vol(fullfile(EXPT.analysis_dir,S.name,M,['run',num2str(run)],fname));
