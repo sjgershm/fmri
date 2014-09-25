@@ -26,6 +26,9 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names,suppress)
     if nargin<5
         suppress=0;
     end
+    if suppress==1
+        w = warning ('off','all');
+    end
     
     S = EXPT.subject(subj);
     M = ['model',num2str(model)];
@@ -63,3 +66,7 @@ function [beta, mask] = fmri_load_beta(EXPT,model,subj,names,suppress)
             end
         end
     end
+    if suppress==1
+        warning(w);
+    end
+end
