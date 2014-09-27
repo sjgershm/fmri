@@ -35,3 +35,9 @@ function [mask_combined,mask_run1] = fmri_load_combined_mask(EXPT,model,subj)
             mask_combined = mask_combined & mask;
         end
     end
+
+    % output it to <model>, using the V from a run mask
+    V.fname = fullfile(EXPT.analysis_dir,S.name,M,'mask_allruns.img');
+    spm_write_vol(V,mask_combined);
+    
+    %[masks,volmasks,volrois] = complang02_langloc_roi_princeton(EXPT,model,subj,threshold)
