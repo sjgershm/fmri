@@ -36,6 +36,15 @@ function fmri_preproc_princeton(EXPT,subj,tasks)
         return
     end
     
+    if isfield(EXPT,'site')
+        % Princeton
+    else
+        % MIT - add all relevant fields fields first
+        EXPT.site = 'MIT';
+        EXPT = addNewFields(EXPT);
+    end
+    
+    
     if isfield(EXPT,'multiple_anatomicals')
         multiple_anatomicals = EXPT.multiple_anatomicals;
     else
@@ -414,6 +423,8 @@ function fmri_preproc_princeton(EXPT,subj,tasks)
         model = 3;
         M = ['model',num2str(model)];
         
+        nmaxhardwired = 721; % MIT requires this
+        
         fprintf('extracting event information\n');
         
         %% generate regressors per run
@@ -442,9 +453,13 @@ function fmri_preproc_princeton(EXPT,subj,tasks)
                         'stim_sentencesAllSubset_7',...
                         'stim_sentencesAllSubset_8'}
                     runsToUse(r) = 1;
-                  case {'stim_sentencesSubsetA_1';
-                        'stim_sentencesSubsetB_1'}
-                    runsToUse(r) = 1;
+                  case {'stim_sentencesSubsetA_1',...
+                        'stim_sentencesSubsetB_1',...
+                        'stim_sentencesSubsetA_2',...
+                        'stim_sentencesSubsetB_2',...
+                        'stim_sentencesSubsetA_3',...
+                        'stim_sentencesSubsetB_3'}
+                        runsToUse(r) = 1;
                   case {'stim_words1',...
                         'stim_words2',...
                         'stim_words3',...
@@ -459,7 +474,7 @@ function fmri_preproc_princeton(EXPT,subj,tasks)
                 end
                     
                 if (s == session) & (runsToUse(r) == 1)
-                    % want the one with event durations
+                    % want the one with event durations (para{1} rather than para{3})
                     parafile = S.functional(r).para{1};
                     
                     % get all the events/durations in units of TRs 
@@ -517,15 +532,29 @@ function fmri_preproc_princeton(EXPT,subj,tasks)
                 end; % if for runs in this session
             end; % loop over runs
         end; % loop over sessions
-        
+                
         %% aggregate all the regressors across runs
+        
+        fprintf('\naggregating regressors across runs in use\n');
         
         ntotal = 0;
         nmax = size(eventRegressorsPerRun{1},2);
         for r = 1:length(S.functional)
-            if runsToUse(r)
-                if size(eventRegressorsPerRun{r},2) ~= nmax
-                    fprintf('error: mismatch in #events\n');return;
+            if runsToUse(r) 
+                fprintf('\trun %d - %s\n',r,S.functional(r).name);
+
+                switch EXPT.site
+                  case {'PU'}
+                    if (size(eventRegressorsPerRun{r},2) ~= nmax)
+                        parafile = S.functional(r).para{1}
+                        fprintf('error: mismatch in #events (%d, should be %d)\n',size(eventRegressorsPerRun{r},2),nmax);return;
+                    end
+                  case {'MIT'}
+                    if (size(eventRegressorsPerRun{r},2) ~= nmaxhardwired)
+                        % MIT, fix
+                        [l1,l2] = size(eventRegressorsPerRun{r});
+                        eventRegressorsPerRun{r} = [eventRegressorsPerRun{r},zeros(l1,nmaxhardwired-l2)];
+                    end
                 end
                 ntotal = ntotal + size(eventRegressorsPerRun{r},1);
             end
@@ -536,6 +565,8 @@ function fmri_preproc_princeton(EXPT,subj,tasks)
         eidx = 1;
         for r = 1:length(S.functional)
             if runsToUse(r)
+                %S.functional(r).name
+                %size(eventRegressorsPerRun{r})
                 nhere = size(eventRegressorsPerRun{r},1);
                 erange = eidx:(eidx+nhere-1);
                 eventRegressors(erange,:) = eventRegressorsPerRun{r};
@@ -817,3 +848,87 @@ function fmri_preproc_princeton(EXPT,subj,tasks)
         end; % loop over TR shift
             
     end; % end of switch
+        
+        
+        
+%
+% add new fields to a MIT EXPT structure to make it compatible with Princeton code
+%
+        
+function [EXPT] = addNewFields(EXPT)
+    
+    nSubjects = length(EXPT.subject);
+    
+    for is = 1:nSubjects
+        
+        nFunctionalRuns = length(EXPT.subject(is).functional);
+        
+        session = 1;
+        prev    = -1;
+        
+        for ir = 1:nFunctionalRuns
+        
+            run = EXPT.subject(is).functional(ir).run;
+            if run > prev
+                % increasing, same session
+            else
+                % decreased, new session
+                prev = run;
+                session = session + 1;
+            end
+            EXPT.subject(is).functional(ir).session = session;
+            EXPT.subject(is).functional(ir).date    = session;
+            EXPT.subject(is).functional(ir).length  = stimToLength(EXPT.subject(is).functional(ir).name);
+
+            if isempty(EXPT.subject(is).functional(ir).para{1})
+                t = EXPT.subject(is).functional(ir).para{3};
+                s = regexprep(t,'_zero\.para','\.para');
+                EXPT.subject(is).functional(ir).para{1} = s;
+            end
+        end
+    end
+    
+    
+%
+% returns the number of TRs in each run type
+%
+    
+function [length] = stimToLength(runName)
+    
+    switch runName
+        
+      case {'stim_sentencesAllSubset_1',...
+            'stim_sentencesAllSubset_2',...
+            'stim_sentencesAllSubset_3',...
+            'stim_sentencesAllSubset_4',...
+            'stim_sentencesAllSubset_5',...
+            'stim_sentencesAllSubset_6',...
+            'stim_sentencesAllSubset_7',...
+            'stim_sentencesAllSubset_8'}
+        length = 220;
+        
+      case {'stim_sentencesSubsetA_1',...
+            'stim_sentencesSubsetB_1',...
+            'stim_sentencesSubsetA_2',...
+            'stim_sentencesSubsetB_2',...
+            'stim_sentencesSubsetA_3',...
+            'stim_sentencesSubsetB_3'}
+        length = 226;
+        
+      case {'stim_words1',...
+            'stim_words2',...
+            'stim_words3',...
+            'stim_words4',...
+            'stim_words5',...
+            'stim_words6',...
+            'stim_words7',...
+            'stim_words8'}
+        length = 226;
+        
+      case {'LangLoc_1',
+            'LangLoc_2'}
+        length = 179;
+        
+      otherwise
+        length = 0;
+    end
