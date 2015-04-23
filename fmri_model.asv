@@ -1,0 +1,42 @@
+function SPM = fmri_model(EXPT,model,submat,runs)
+    
+    % Calls functions that perform first-level GLM analysis.
+    %
+    % USAGE: SPM = fmri_model(EXPT,model,[submat],[runs])
+    %
+    % INPUTS:
+    %   EXPT - experiment structure
+    %   model - model number
+    %   submat (optional) - vector of subjects to estimate (default: all subjects)
+    %   runs (optional) - which runs to analyze
+    %   type: optional, 1-6. default is 1
+    %       1: Individual cue, general target
+    %       2: General cue, general target
+    %       3: Individual cue, general target zero offset
+    %       4: General cue, general target zero offset
+    %
+    % OUTPUTS:
+    %   SPM - model structure
+    %
+    % 2015-04-23, Walid Bendris (wbendris@mit.edu): Function created
+    
+    
+    if nargin < 3 || isempty(submat)
+        submat = 1:length(EXPT.subject);
+    elseif nargin < 4 || isempty(runs)
+        runs = 1:length(EXPT.subject);
+    end
+    
+    switch(type)
+        case 1
+            SPM = fmri_model(EXPT,model,submat,runs);
+        case 2
+            SPM = fmri_model_princeton(EXPT,model,submat,runs);
+        case 3
+            SPM = fmri_model_fir(EXPT,model,submat,runs);
+        case 4
+            SPM = fmri_model_old(EXPT,model,submat,runs);
+    end
+            
+    
+end

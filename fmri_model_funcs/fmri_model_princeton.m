@@ -27,7 +27,7 @@ function SPM = fmri_model_princeton(EXPT,model,submat,runs)
                 
         S = EXPT.subject(subj); sname = S.name;
         disp(S.name);
-        if nargin < 4; runs = 1:length(S.functional); end
+        if nargin < 4 || isempty(runs); runs = 1:length(S.functional); end
         
         for i = runs
                         
